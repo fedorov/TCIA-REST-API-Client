@@ -1,5 +1,5 @@
 
-import urllib2, urllib
+import urllib2, urllib, string
 #
 # Refer https://wiki.cancerimagingarchive.net/display/Public/REST+API+Usage+Guide for complete list of API
 #
@@ -19,15 +19,32 @@ class TCIAClient:
         
 
 # Test GetCollectionValues
-TCIAClient = TCIAClient("a9312dfe-4465-4e0b-8b76-8eeab0b7a7aace5")  # Set the API-Key
+keyFile = open('/Users/fedorov/tcia_api.key','r')
+key = keyFile.readline()[:-1]
+print 'Using key \"',key,'\"'
+TCIAClient = TCIAClient(key)  # Set the API-Key
 response = TCIAClient.execute(baseUrl="https://services.cancerimagingarchive.net/services/TCIA/TCIA/query/getCollectionValues", queryParameters={ "modality" : "MR"})  # Set baseURL and queryParams - Modality = MR
+
 
 if response.getcode() == 200:
     print "Server Returned:\n"
-    print response.read()
+    responseStr = response.read()[:-1]
+    print responseStr
+    # print response.read()
     
 else:
     print "Error : " + str(response.getcode) # print error code
+
+collections = string.split(responseStr,'\n')
+print 'Collections:',collections
+for c in collections:
+  print 'Collection: ',c
+
+  response = TCIAClient.execute(baseUrl="https://services.cancerimagingarchive.net/services/TCIA/TCIA/query/getPatientStudy", queryParameters={ "collection" : c[1:-1]})  # Set baseURL and  queryParams - series_instance_uid
+  if response.getcode() == 200:
+    print 'Response:',response.read()
+  else:
+    print "Bad return code"
 
 # Test GetImages
 
